@@ -3515,7 +3515,7 @@ function LNS.getRule(item, fromFunction, index)
     local countHave    = mq.TLO.FindItemCount(item.Name())() + mq.TLO.FindItemBankCount(item.Name())()
     local itemName     = item.Name()
     local newRule      = false
-    local alwaysAsk    = LNS.Settings.AlwaysAsk
+    local alwaysAsk    = true
     local qKeep        = 0
     local iCanUse      = true
     local freeSpace    = mq.TLO.Me.FreeInventory()
@@ -3615,7 +3615,7 @@ function LNS.getRule(item, fromFunction, index)
     lootDecision = lootRule
 
     -- Handle AlwaysAsk setting
-    if alwaysAsk then
+    if alwaysAsk and lootRule == "Ask" then
         newRule = true
         lootDecision = "Ask"
         dbgTbl = {
