@@ -1277,21 +1277,27 @@ function LNS_UI.drawNewItemsTable()
                     if ImGui.Button('Save Rule') then
                         local classes = LNS.tempLootAll[itemID] and "All" or tmpClasses[itemID]
                         local ruleTable = "GlobalItems"
+                        local ruleToSave = tmpRules[itemID]
+                        -- Bare "Quest" would save with no qty, which renders as blank in the items tab.
+                        -- Expand to "Quest|<QuestKeep>" so the stored rule is explicit and displays correctly.
+                        if ruleToSave == "Quest" then
+                            ruleToSave = string.format("Quest|%s", settings.Settings.QuestKeep or 1)
+                        end
                         LNS.enterNewItemRuleInfo({
                             ID = itemID,
                             RuleType = ruleTable,
                             ItemName = item.Name,
-                            Rule = tmpRules[itemID],
+                            Rule = ruleToSave,
                             Classes = classes,
                             Link = item.Link,
                             CorpseID = item.CorpseID,
                         })
-                        LNS.addRule(itemID, ruleTable, tmpRules[itemID], classes, item.Link)
+                        LNS.addRule(itemID, ruleTable, ruleToSave, classes, item.Link)
 
                         table.remove(settings.TempSettings.NewItemIDs, idx)
                         table.insert(itemsToRemove, itemID)
                         Logger.Debug(LNS.guiLoot.console, "\agSaving\ax --\ayNEW ITEM RULE\ax-- Item: \at%s \ax(ID:\ag %s\ax) with rule: \at%s\ax, classes: \at%s\ax, link: \at%s\ax",
-                            item.Name, itemID, tmpRules[itemID], tmpClasses[itemID], item.Link)
+                            item.Name, itemID, ruleToSave, tmpClasses[itemID], item.Link)
                     end
                     ImGui.Unindent(35)
                     ImGui.PopStyleColor()
@@ -3183,7 +3189,14 @@ function LNS_UI.RenderModifyItemWindow()
 
         if tempValues.Rule == nil then
             if rule ~= nil then
-                tempValues.Rule = rule
+                -- Split "Quest|N" into Rule + Qty so the combo matches and the Qty field shows N
+                local base, qty = rule:match("^(Quest)|(%d+)$")
+                if base then
+                    tempValues.Rule = base
+                    tempValues.Qty = tonumber(qty)
+                else
+                    tempValues.Rule = rule
+                end
             else
                 tempValues.Rule = 'Ask'
             end
@@ -3200,6 +3213,10 @@ function LNS_UI.RenderModifyItemWindow()
         end
 
         if tempValues.Rule == "Quest" then
+            -- Bare "Quest" rules or fresh switches to Quest have no qty yet — seed from global default
+            if not tempValues.Qty or tempValues.Qty <= 0 then
+                tempValues.Qty = settings.Settings.QuestKeep or 1
+            end
             ImGui.SameLine()
             ImGui.SetNextItemWidth(100)
             tempValues.Qty = ImGui.InputInt("QuestQty", tempValues.Qty, 1, 1)
