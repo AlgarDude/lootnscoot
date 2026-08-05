@@ -2902,7 +2902,7 @@ function LNS.lootItem(mq_item, index, doWhat, button, qKeep, cantWear)
         mq.delay(1) -- Small delay to ensure command execution.
 
         mq.delay(5000, function()
-            return mq.TLO.Window('ConfirmationDialogBox').Open() or mq.TLO.Cursor() ~= nil
+            return mq.TLO.Window('ConfirmationDialogBox').Open() or mq.TLO.Cursor() ~= nil or not mq.TLO.Window('LootWnd').Open()
         end)
 
         -- Handle confirmation dialog for no-drop items
@@ -3392,6 +3392,9 @@ function LNS.lootMobs(limit)
             end
 
             LNS.navToID(corpseID)
+
+            mobsNearby = mq.TLO.SpawnCount(string.format('npc xtarhater radius %s zradius %s', settings.Settings.MobsTooClose + settings.Settings.CorpseRadius,
+                settings.Settings.CorpseZRadius or 50))()
 
             if mobsNearby > 0 and not settings.Settings.CombatLooting then
                 Logger.Debug(LNS.guiLoot.console, 'lootMobs(): \arStopping\ax looting due to \ayAGGRO!')
